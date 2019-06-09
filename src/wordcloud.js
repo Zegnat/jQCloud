@@ -3,7 +3,7 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     this.element = element
 
     this.word_array = wordArray || []
-    this.options = options
+    this.options = options || {}
 
     this.sizeGenerator = null
     this.colorGenerator = null
@@ -47,12 +47,12 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     if (this.options.width) {
       this.element.style.width = this.options.width + 'px'
     } else {
-      this.options.width = parseFloat(window.getComputedStyle(this.element).width)
+      this.options.width = parseFloat(window.getComputedStyle(this.element).width) || this.DEFAULTS.width
     }
     if (this.options.height) {
       this.element.style.height = this.options.height + 'px'
     } else {
-      this.options.height = parseFloat(window.getComputedStyle(this.element).height)
+      this.options.height = parseFloat(window.getComputedStyle(this.element).height) || this.DEFAULTS.height
     }
 
     // Default options value
