@@ -24,12 +24,8 @@
     }
   ],
   "main": "src/wordcloud.js",
-  "dependencies": {
-    "jquery": ">= 1.9.0"
-  },
   "keywords": [
     "cloud",
-    "jquery",
     "keyword",
     "tag"
   ],

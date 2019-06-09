@@ -1,4 +1,3 @@
-/* global $ */
 class Wordcloud { // eslint-disable-line no-unused-vars
   constructor (element, wordArray, options) {
     this.element = element
@@ -46,18 +45,18 @@ class Wordcloud { // eslint-disable-line no-unused-vars
   initialize () {
     // Set/Get dimensions
     if (this.options.width) {
-      this.$element.width(this.options.width)
+      this.element.style.width = this.options.width + 'px'
     } else {
-      this.options.width = this.$element.width()
+      this.options.width = parseFloat(window.getComputedStyle(this.element).width)
     }
     if (this.options.height) {
-      this.$element.height(this.options.height)
+      this.element.style.height = this.options.height + 'px'
     } else {
-      this.options.height = this.$element.height()
+      this.options.height = parseFloat(window.getComputedStyle(this.element).height)
     }
 
     // Default options value
-    this.options = $.extend(true, {}, this.DEFAULTS, this.options)
+    this.options = Object.assign({}, this.DEFAULTS, this.options)
 
     // Ensure delay
     if (this.options.delay === null) {
@@ -74,7 +73,7 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     // Direct function
     if (typeof this.options.colors === 'function') {
       this.colorGenerator = this.options.colors
-    } else if ($.isArray(this.options.colors)) { // Array of sizes
+    } else if (Array.isArray(this.options.colors)) { // Array of sizes
       var cl = this.options.colors.length
       if (cl > 0) {
         // Fill the sizes array to X items
@@ -94,13 +93,13 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     // Direct function
     if (typeof this.options.fontSize === 'function') {
       this.sizeGenerator = this.options.fontSize
-    } else if ($.isPlainObject(this.options.fontSize)) { // Object with 'from' and 'to'
+    } else if (Object.prototype.toString.call(this.options.fontSize) === '[object Object]') { // Object with 'from' and 'to'
       this.sizeGenerator = function (width, height, weight) {
         var max = width * this.options.fontSize.from
         var min = width * this.options.fontSize.to
         return Math.round(min + (max - min) * 1.0 / (this.options.steps - 1) * (weight - 1)) + 'px'
       }
-    } else if ($.isArray(this.options.fontSize)) { // Array of sizes
+    } else if (Array.isArray(this.options.fontSize)) { // Array of sizes
       var sl = this.options.fontSize.length
       if (sl > 0) {
         // Fill the sizes array to X items
@@ -122,36 +121,36 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     this.clearTimeouts()
 
     // Namespace word ids to avoid collisions between multiple clouds
-    this.data.namespace = (this.$element.attr('id') || Math.floor((Math.random() * 1000000)).toString(36)) + '_word_'
+    this.data.namespace = (this.element.id || Math.floor((Math.random() * 1000000)).toString(36)) + '_word_'
 
-    this.$element.addClass('jqcloud')
+    this.element.classList.add('jqcloud')
 
     // Container's CSS position cannot be 'static'
-    if (this.$element.css('position') === 'static') {
-      this.$element.css('position', 'relative')
+    if (window.getComputedStyle(this.element).position === 'static') {
+      this.element.style.position = 'relative'
     }
 
     // Delay execution so that the browser can render the page before the computatively intensive word cloud drawing
-    this.createTimeout($.proxy(this.drawWordCloud, this), 10)
+    this.createTimeout(this.drawWordCloud.bind(this), 10)
 
     // Attach window resize event
     if (this.options.autoResize) {
-      $(window).on('resize.' + this.data.namespace, throttle(this.resize, 50, this))
+      window.addEventListener('resize', throttle(this.resize, 50, this))
     }
   }
 
   // Helper function to keep track of timeouts so they can be destroyed
   createTimeout (callback, time) {
-    var timeout = setTimeout($.proxy(function () {
+    var timeout = setTimeout(function () {
       delete this.data.timeouts[timeout]
       callback()
-    }, this), time)
+    }.bind(this), time)
     this.data.timeouts[timeout] = true
   }
 
   // Destroy all timeouts
   clearTimeouts () {
-    $.each(this.data.timeouts, function (key) {
+    Object.keys(this.data.timeouts).forEach(function (key) {
       clearTimeout(key)
     })
     this.data.timeouts = {}
@@ -182,7 +181,7 @@ class Wordcloud { // eslint-disable-line no-unused-vars
   drawWordCloud () {
     var i, l
 
-    this.$element.children('[id^="' + this.data.namespace + '"]').remove()
+    this.element.querySelectorAll('*[id^="' + this.data.namespace + '"]').forEach(node => node.remove())
 
     if (this.word_array.length === 0) {
       return
@@ -227,7 +226,7 @@ class Wordcloud { // eslint-disable-line no-unused-vars
       }
 
       if (typeof this.options.afterCloudRender === 'function') {
-        this.options.afterCloudRender.call(this.$element)
+        this.options.afterCloudRender.call(this.element)
       }
     }
   }
@@ -257,40 +256,45 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     var wordStyle
 
     // Create word attr object
-    word.attr = $.extend({}, word.html, { id: wordId })
+    word.attr = Object.assign({}, word.html, { id: wordId })
 
     // Linearly map the original weight to a discrete scale from 1 to 10
     // Only if weights are different
     if (this.data.max_weight !== this.data.min_weight) {
       weight = Math.round((word.weight - this.data.min_weight) * 1.0 * (this.options.steps - 1) / (this.data.max_weight - this.data.min_weight)) + 1
     }
-    wordSpan = $('<span>').attr(word.attr)
+    wordSpan = document.createElement('span')
+    for (let attribute in word.attr) {
+      if (word.attr.hasOwnProperty(attribute)) {
+        wordSpan.setAttribute(attribute, word.attr[attribute])
+      }
+    }
 
-    wordSpan.addClass('jqcloud-word')
+    wordSpan.classList.add('jqcloud-word')
 
     // Apply class
     if (this.options.classPattern) {
-      wordSpan.addClass(this.options.classPattern.replace('{n}', weight))
+      wordSpan.classList.add(this.options.classPattern.replace('{n}', weight))
     }
 
     // Apply color
     if (this.data.colors.length) {
-      wordSpan.css('color', this.data.colors[weight - 1])
+      wordSpan.style.color = this.data.colors[weight - 1]
     }
 
     // Apply color from word property
     if (word.color) {
-      wordSpan.css('color', word.color)
+      wordSpan.style.color = word.color
     }
 
     // Apply size
     if (this.data.sizes.length) {
-      wordSpan.css('font-size', this.data.sizes[weight - 1])
+      wordSpan.style.fontSize = this.data.sizes[weight - 1]
     }
 
     // Render using template function if provided.
     if (this.options.template) {
-      wordSpan.html(this.options.template(word))
+      wordSpan.innerHTML = this.options.template(word)
     } else if (word.link) {
       // Append link if word.link attribute was set
       // If link is a string, then use it as the link href
@@ -302,9 +306,12 @@ class Wordcloud { // eslint-disable-line no-unused-vars
         word.link.href = encodeURI(word.link.href).replace(/'/g, '%27')
       }
 
-      wordSpan.append($('<a>').attr(word.link).text(word.text))
+      let wordLink = document.createElement('a')
+      wordLink.href = word.link.href
+      wordLink.textContent = word.text
+      wordSpan.appendChild(wordLink)
     } else {
-      wordSpan.text(word.text)
+      wordSpan.textContent = word.text
     }
 
     // Bind handlers to words
@@ -312,17 +319,17 @@ class Wordcloud { // eslint-disable-line no-unused-vars
       wordSpan.on(word.handlers)
     }
 
-    this.$element.append(wordSpan)
+    this.element.appendChild(wordSpan)
 
     wordSize = {
-      width: wordSpan.outerWidth(),
-      height: wordSpan.outerHeight()
+      width: wordSpan.offsetWidth,
+      height: wordSpan.offsetHeight
     }
     wordSize.left = this.options.center.x * this.options.width - wordSize.width / 2.0
     wordSize.top = this.options.center.y * this.options.height - wordSize.height / 2.0
 
     // Save a reference to the style property, for better performance
-    wordStyle = wordSpan[0].style
+    wordStyle = wordSpan.style
     wordStyle.position = 'absolute'
     wordStyle.left = wordSize.left + 'px'
     wordStyle.top = wordSize.top + 'px'
@@ -386,10 +393,10 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     index = index || 0
 
     // if not visible then do not attempt to draw
-    if (!this.$element.is(':visible')) {
-      this.createTimeout($.proxy(function () {
+    if (!(this.element.offsetWidth || this.element.offsetHeight || this.element.getClientRects().length)) {
+      this.createTimeout(function () {
         this.drawOneWordDelayed(index)
-      }, this), 10)
+      }.bind(this), 10)
 
       return
     }
@@ -397,12 +404,12 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     if (index < this.word_array.length) {
       this.drawOneWord(index, this.word_array[index])
 
-      this.createTimeout($.proxy(function () {
+      this.createTimeout(function () {
         this.drawOneWordDelayed(index + 1)
-      }, this), this.options.delay)
+      }.bind(this), this.options.delay)
     } else {
       if (typeof this.options.afterCloudRender === 'function') {
-        this.options.afterCloudRender.call(this.$element)
+        this.options.afterCloudRender.call(this.element)
       }
     }
   }
@@ -410,13 +417,13 @@ class Wordcloud { // eslint-disable-line no-unused-vars
   // Destroy any data and objects added by the plugin
   destroy () {
     if (this.options.autoResize) {
-      $(window).off('resize.' + this.data.namespace)
+      // @TODO: get access to resize function to unset its handler:
+      // $(window).off('resize.' + this.data.namespace)
     }
 
     this.clearTimeouts()
-    this.$element.removeClass('jqcloud')
-    this.$element.removeData('jqcloud')
-    this.$element.children('[id^="' + this.data.namespace + '"]').remove()
+    this.element.classList.remove('jqcloud')
+    this.element.querySelectorAll('*[id^="' + this.data.namespace + '"]').forEach(node => node.remove())
   }
 
   // Update the list of words
@@ -430,8 +437,8 @@ class Wordcloud { // eslint-disable-line no-unused-vars
 
   resize () {
     var newSize = {
-      width: this.$element.width(),
-      height: this.$element.height()
+      width: window.getComputedStyle(this.element).width,
+      height: window.getComputedStyle(this.element).height
     }
 
     if (newSize.width !== this.options.width || newSize.height !== this.options.height) {
