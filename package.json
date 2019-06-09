@@ -1,8 +1,8 @@
 {
-  "name": "jqcloud2",
-  "version": "2.0.3",
-  "homepage": "https://github.com/Zegnat/jQCloud",
-  "description": "jQuery plugin for drawing neat word clouds that actually look like clouds",
+  "name": "wordcloud",
+  "version": "1.0.0",
+  "homepage": "https://github.com:Zegnat/wordcloud",
+  "description": "Wordcloud class for drawing neat word clouds that actually look like clouds",
   "authors": [
     {
       "name": "Luca Ongaro",
@@ -23,7 +23,7 @@
       "homepage": "https://vanderven.se/martijn/"
     }
   ],
-  "main": "src/jqcloud.js",
+  "main": "src/wordcloud.js",
   "dependencies": {
     "jquery": ">= 1.9.0"
   },
@@ -36,9 +36,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/Zegnat/jQCloud.git"
+    "url": "git://github.com:Zegnat/wordcloud.git"
   },
   "bugs": {
-    "url": "https://github.com/Zegnat/jQCloud/issues"
+    "url": "https://github.com:Zegnat/wordcloud/issues"
   }
 }
