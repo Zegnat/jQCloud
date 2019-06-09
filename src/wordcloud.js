@@ -124,7 +124,7 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     // Namespace word ids to avoid collisions between multiple clouds
     this.data.namespace = (this.element.id || Math.floor((Math.random() * 1000000)).toString(36)) + '_word_'
 
-    this.element.classList.add('jqcloud')
+    this.element.classList.add('wordcloud')
 
     // Container's CSS position cannot be 'static'
     if (window.getComputedStyle(this.element).position === 'static') {
@@ -271,7 +271,7 @@ class Wordcloud { // eslint-disable-line no-unused-vars
       }
     }
 
-    wordSpan.classList.add('jqcloud-word')
+    wordSpan.classList.add('wordcloud-word')
 
     // Apply class
     if (this.options.classPattern) {
@@ -423,7 +423,7 @@ class Wordcloud { // eslint-disable-line no-unused-vars
     }
 
     this.clearTimeouts()
-    this.element.classList.remove('jqcloud')
+    this.element.classList.remove('wordcloud')
     this.element.querySelectorAll('*[id^="' + this.data.namespace + '"]').forEach(node => node.remove())
   }
 
