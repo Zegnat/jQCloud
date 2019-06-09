@@ -74,7 +74,7 @@ class Wordcloud {
     return false
   }
 
-  static moveRectangular(word, canvas, options, state) {
+  static moveRectangular (word, canvas, options, state) {
     const step = 18.0
     if (Object.keys(state).length === 0) {
       state.stepsInDirection = 0
@@ -106,7 +106,7 @@ class Wordcloud {
     return word
   }
 
-  static moveElliptic(word, canvas, options, state) {
+  static moveElliptic (word, canvas, options, state) {
     const step = 2.0
     if (Object.keys(state).length === 0) {
       state.radius = 0.0
