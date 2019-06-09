@@ -14,8 +14,6 @@ class Wordcloud {
     // Data used internally
     this.data = {
       namespace: (this.wrapper.id || Math.floor((Math.random() * 1000000)).toString(36)) + '_word_',
-      step: (this.options.shape === 'rectangular') ? 18.0 : 2.0,
-      angle: this.options.random() * 6.28,
       aspect_ratio: this.width / this.height,
       placed_words: []
     }
@@ -36,65 +34,31 @@ class Wordcloud {
 
   // Function to draw a word, by moving it in spiral until it finds a suitable empty place
   drawOneWord (word, index) {
-    var angle = this.data.angle
-    var radius = 0.0
-    var stepsInDirection = 0.0
-    var quarterTurns = 0.0
-
     const wordSpan = document.createElement('span')
     wordSpan.id = this.data.namespace + index
-    wordSpan.classList.add('wordcloud-word')
     wordSpan.textContent = word.text
     wordSpan.style.fontSize = this.options.size(word.weight)
-    console.log('fontSize', word.weight, this.options.size(word.weight))
     this.wrapper.appendChild(wordSpan)
 
-    const wordSize = {
-      width: wordSpan.offsetWidth,
-      height: wordSpan.offsetHeight
-    }
-    wordSize.left = this.options.center.x * this.width - wordSize.width / 2.0
-    wordSize.top = this.options.center.y * this.height - wordSize.height / 2.0
+    word.index = index
+    word.width = wordSpan.offsetWidth
+    word.height = wordSpan.offsetHeight
+    word.left = 0.5 * this.width - word.width / 2.0
+    word.top = 0.5 * this.height - word.height / 2.0
 
     // Save a reference to the style property, for better performance
     const wordStyle = wordSpan.style
     wordStyle.position = 'absolute'
-    wordStyle.left = wordSize.left + 'px'
-    wordStyle.top = wordSize.top + 'px'
+    wordStyle.left = word.left + 'px'
+    wordStyle.top = word.top + 'px'
 
+    const state = {}
     while (this.overlapsOthers(wordSpan.getBoundingClientRect(), this.data.placed_words)) {
-      // option shape is 'rectangular' so move the word in a rectangular spiral
-      if (this.options.shape === 'rectangular') {
-        stepsInDirection++
-
-        if (stepsInDirection * this.data.step > (1 + Math.floor(quarterTurns / 2.0)) * this.data.step * ((quarterTurns % 4 % 2) === 0 ? 1 : this.data.aspect_ratio)) {
-          stepsInDirection = 0.0
-          quarterTurns++
-        }
-
-        switch (quarterTurns % 4) {
-          case 1:
-            wordSize.left += this.data.step * this.data.aspect_ratio + this.options.random() * 2.0
-            break
-          case 2:
-            wordSize.top -= this.data.step + this.options.random() * 2.0
-            break
-          case 3:
-            wordSize.left -= this.data.step * this.data.aspect_ratio + this.options.random() * 2.0
-            break
-          case 0:
-            wordSize.top += this.data.step + this.options.random() * 2.0
-            break
-        }
-      } else { // Default settings: elliptic spiral shape
-        radius += this.data.step
-        angle += (index % 2 === 0 ? 1 : -1) * this.data.step
-
-        wordSize.left = this.options.center.x * this.width - (wordSize.width / 2.0) + (radius * Math.cos(angle)) * this.data.aspect_ratio
-        wordSize.top = this.options.center.y * this.height + radius * Math.sin(angle) - (wordSize.height / 2.0)
-      }
-      wordStyle.left = wordSize.left + 'px'
-      wordStyle.top = wordSize.top + 'px'
+      let output = this.options.spread({ ...word, index }, { height: this.height, width: this.width }, this.options, state)
+      word.left = output.left
+      word.top = output.top
+      wordStyle.left = word.left + 'px'
+      wordStyle.top = word.top + 'px'
     }
 
     // Save position for further usage
@@ -109,11 +73,58 @@ class Wordcloud {
     }
     return false
   }
+
+  static moveRectangular(word, canvas, options, state) {
+    const step = 18.0
+    if (Object.keys(state).length === 0) {
+      state.stepsInDirection = 0
+      state.quarterTurns = 0
+      state.aspect_ratio = canvas.width / canvas.height
+    }
+    state.stepsInDirection += 1
+
+    if (state.stepsInDirection * step > (1 + Math.floor(state.quarterTurns / 2.0)) * step * ((state.quarterTurns % 4 % 2) === 0 ? 1 : state.aspect_ratio)) {
+      state.stepsInDirection = 0
+      state.quarterTurns += 1
+    }
+
+    switch (state.quarterTurns % 4) {
+      case 1:
+        word.left += step * state.aspect_ratio + options.random() * 2.0
+        break
+      case 2:
+        word.top -= step + options.random() * 2.0
+        break
+      case 3:
+        word.left -= step * state.aspect_ratio + options.random() * 2.0
+        break
+      case 0:
+        word.top += step + options.random() * 2.0
+        break
+    }
+
+    return word
+  }
+
+  static moveElliptic(word, canvas, options, state) {
+    const step = 2.0
+    if (Object.keys(state).length === 0) {
+      state.radius = 0.0
+      state.angle = options.random() * 6.28
+      state.aspect_ratio = canvas.width / canvas.height
+    }
+    state.radius += step
+    state.angle += (word.index % 2 === 0 ? 1 : -1) * step
+
+    return {
+      left: 0.5 * canvas.width - (word.width / 2.0) + (state.radius * Math.cos(state.angle)) * state.aspect_ratio,
+      top: 0.5 * canvas.height + state.radius * Math.sin(state.angle) - (word.height / 2.0)
+    }
+  }
 }
 
 Wordcloud.prototype.DEFAULTS = {
-  center: { x: 0.5, y: 0.5 },
-  shape: 'elliptic',
+  spread: Wordcloud.moveElliptic,
   random: Math.random,
   size: weight => 0.5 + weight + 'em'
 }
