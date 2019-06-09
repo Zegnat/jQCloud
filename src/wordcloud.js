@@ -36,7 +36,8 @@ class Wordcloud { // eslint-disable-line no-unused-vars
       autoResize: false,
       colors: null,
       fontSize: null,
-      template: null
+      template: null,
+      random: Math.random
     }
 
     this.initialize()
@@ -115,7 +116,7 @@ class Wordcloud { // eslint-disable-line no-unused-vars
       }
     }
 
-    this.data.angle = Math.random() * 6.28
+    this.data.angle = this.options.random() * 6.28
     this.data.step = (this.options.shape === 'rectangular') ? 18.0 : 2.0
     this.data.aspect_ratio = this.options.width / this.options.height
     this.clearTimeouts()
@@ -346,16 +347,16 @@ class Wordcloud { // eslint-disable-line no-unused-vars
 
         switch (quarterTurns % 4) {
           case 1:
-            wordSize.left += this.data.step * this.data.aspect_ratio + Math.random() * 2.0
+            wordSize.left += this.data.step * this.data.aspect_ratio + this.options.random() * 2.0
             break
           case 2:
-            wordSize.top -= this.data.step + Math.random() * 2.0
+            wordSize.top -= this.data.step + this.options.random() * 2.0
             break
           case 3:
-            wordSize.left -= this.data.step * this.data.aspect_ratio + Math.random() * 2.0
+            wordSize.left -= this.data.step * this.data.aspect_ratio + this.options.random() * 2.0
             break
           case 0:
-            wordSize.top += this.data.step + Math.random() * 2.0
+            wordSize.top += this.data.step + this.options.random() * 2.0
             break
         }
       } else { // Default settings: elliptic spiral shape
